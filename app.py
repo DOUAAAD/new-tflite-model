@@ -8,7 +8,7 @@ from datetime import datetime
 
 # Load the TensorFlow Lite model
 interpreter = tf.lite.Interpreter(model_path="model.tflite")
-interpreter.allocate_tensors()
+interpreter.allocate_tensors()  # تخصيص الذاكرة بعد تحميل النموذج
 
 # Get model input and output details
 input_details = interpreter.get_input_details()
@@ -167,19 +167,16 @@ if uploaded_file:
     # Prepare the image and make prediction using TensorFlow Lite
     try:
         prepared_image = prepare_image(image_path)
-
-        # Set the input tensor to the prepared image
-        input_tensor_index = input_details[0]['index']
-        interpreter.set_tensor(input_tensor_index, prepared_image)
-
-        # Run inference
+        interpreter.set_tensor(input_details[0]['index'], prepared_image)
         interpreter.invoke()
 
-        # Get prediction results
-        output_tensor_index = output_details[0]['index']
-        prediction = interpreter.get_tensor(output_tensor_index)
+        # Get the prediction
+        output = interpreter.get_tensor(output_details[0]['index'])
+        predicted_class = np.argmax(output)
+        confidence = np.max(output)
 
-        predicted_class = class_names[np.argmax(prediction)]
-        st.success(f"Predicted Class: {predicted_class}")
+        # Display the prediction results
+        st.write(f"Predicted Class: {class_names[predicted_class]}")
+        st.write(f"Confidence: {confidence:.4f}")
     except Exception as e:
-        st.error(f"Error during prediction: {e}")
+        st.write(f"Error: {e}")
